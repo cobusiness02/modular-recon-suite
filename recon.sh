@@ -1,35 +1,42 @@
 #!/bin/bash
 
-# Modular Recon Suite by cobusiness02
-# Usage: ./recon.sh <domain> [module]
+# Modular Recon Suite v1
+# Usage: ./recon.sh <target> <module>
+# Modules: subdomains, ports, http, tech
 
-domain=$1
+target=$1
 module=$2
 
-if [[ -z "$domain" ]]; then
-  echo "Usage: $0 <domain> [module]"
-  echo "Modules: subdomains, ports, http, tech"
-  exit 1
+if [ -z "$target" ] || [ -z "$module" ]; then
+    echo "Usage: $0 <target> <module>"
+    echo "Modules: subdomains, ports, http, tech"
+    exit 1
 fi
 
 case $module in
-  subdomains)
-    echo "[*] Enumerating subdomains for $domain..."
-    dig +short -t ns $domain
-    ;;
-  ports)
-    echo "[*] Scanning ports for $domain..."
-    nmap -Pn -T4 -F $domain
-    ;;
-  http)
-    echo "[*] Probing HTTP services on $domain..."
-    echo $domain | httpx -silent -title -status-code -tech-detect -ip -no-color
-    ;;
-  tech)
-    echo "[*] Fingerprinting tech stack for $domain..."
-    whatweb $domain
-    ;;
-  *)
-    echo "Unknown module. Use: subdomains, ports, http, tech"
-    ;;
+    subdomains)
+        echo "[*] Enumerating DNS nameservers for $target..."
+        dig NS "$target" +short
+        ;;
+
+    ports)
+        echo "[*] Running Nmap fast scan on $target..."
+        nmap -T4 -F "$target"
+        ;;
+
+    http)
+        echo "[*] Probing HTTP services on $target..."
+        echo "$target" | httpx -title -status-code -tech-detect -ip
+        ;;
+
+    tech)
+        echo "[*] Fingerprinting technologies with WhatWeb on $target..."
+        whatweb "$target"
+        ;;
+
+    *)
+        echo "Invalid module: $module"
+        echo "Valid modules: subdomains, ports, http, tech"
+        exit 1
+        ;;
 esac
