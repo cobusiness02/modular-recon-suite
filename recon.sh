@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Modular Recon Suite v1
+# Modular Recon Suite v2
 # Usage: ./recon.sh <target> <module>
 # Modules: subdomains, ports, http, tech
 
@@ -13,30 +13,12 @@ if [ -z "$target" ] || [ -z "$module" ]; then
     exit 1
 fi
 
-case $module in
-    subdomains)
-        echo "[*] Enumerating DNS nameservers for $target..."
-        dig NS "$target" +short
-        ;;
+module_script="./modules/${module}.sh"
 
-    ports)
-        echo "[*] Running Nmap fast scan on $target..."
-        nmap -T4 -F "$target"
-        ;;
-
-    http)
-        echo "[*] Probing HTTP services on $target..."
-        echo "$target" | httpx -title -status-code -tech-detect -ip
-        ;;
-
-    tech)
-        echo "[*] Fingerprinting technologies with WhatWeb on $target..."
-        whatweb "$target"
-        ;;
-
-    *)
-        echo "Invalid module: $module"
-        echo "Valid modules: subdomains, ports, http, tech"
-        exit 1
-        ;;
-esac
+if [ -x "$module_script" ]; then
+    "$module_script" "$target"
+else
+    echo "Invalid module: $module"
+    echo "Valid modules: subdomains, ports, http, tech"
+    exit 1
+fi
